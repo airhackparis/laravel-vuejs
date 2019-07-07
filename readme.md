@@ -32,4 +32,6 @@ We are using:
 4. Hook your Heroku App to your GitHub Repository (Deploy tab)
 5. Enable Automatic Deploys
 6. Trigger a manual deploy
+7. Provision free plugins (database) if needed
+8. Edit environment variable
 
