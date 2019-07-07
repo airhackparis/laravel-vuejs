@@ -9,7 +9,7 @@ class HookController extends Controller
 {
     public function incomingTasks(Request $request)
     {
-        Log::info($request->all());
+        Log::error($request->all());
 
         return response()->json(['success' => true]);
     }
