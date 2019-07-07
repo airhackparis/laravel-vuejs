@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'url' => 'https://airhack-api.herokuapp.com'
+    'url' => 'http://airhack-api.herokuapp.com/api'
 ];

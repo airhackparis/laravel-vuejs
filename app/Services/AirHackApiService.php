@@ -3,7 +3,6 @@
 namespace App\Http\Services;
 
 use GuzzleHttp\Client;
-use Illuminate\Support\Facades\Log;
 
 class AirHackApiService
 {
@@ -23,13 +22,13 @@ class AirHackApiService
 
     }
 
-    public function  checkHealth()
+    public function checkHealth()
     {
         try {
             $response = $this->client->request('GET', $this->apiUrl.'/health');
 
-            return json_decode($response->getBody())['success'] === true;
-        } catch (\Exception $e) {
+            return json_decode($response->getBody(), true)['success'] === "true";
+        } catch(\Exception $exception) {
             return false;
         }
     }
