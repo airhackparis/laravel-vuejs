@@ -29,9 +29,10 @@ We are using:
 1. Push to a public repository on GitHub
 2. Connect to AirHack Heroku dashboard
 3. Ask AirHack organisers to create an app in Heroku
-4. Hook your Heroku App to your GitHub Repository (Deploy tab)
-5. Enable Automatic Deploys
-6. Trigger a manual deploy
-7. Provision free plugins (database) if needed
-8. Edit environment variable
+4. Provision php and nodejs Buildpacks
+5. Hook your Heroku App to your GitHub Repository (Deploy tab)
+6. Enable Automatic Deploys
+7. Trigger a manual deploy
+8. Provision free plugins (database) if needed
+9. Edit environment variable
 
