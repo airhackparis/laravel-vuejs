@@ -26,3 +26,10 @@ We are using:
 
 ## Push to production
 
+1. Push to a public repository on GitHub
+2. Connect to AirHack Heroku dashboard
+3. Ask AirHack organisers to create an app in Heroku
+4. Hook your Heroku App to your GitHub Repository (Deploy tab)
+5. Enable Automatic Deploys
+6. Trigger a manual deploy
+
