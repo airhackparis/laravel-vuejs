@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Services\AirHackApiService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 
 class HookController extends Controller
@@ -17,20 +17,57 @@ class HookController extends Controller
     {
         $result = $request->all();
         $taskersCount = $result["taskersCount"];
-        $taskers = range(1, 50);
+        $taskers = range(1, $taskersCount);
 
         $tasks = $result["tasks"];
         usort($tasks, array($this, "date_sort"));
-        $orderedTaskIds = array_map(function($task) {return $task["id"];}, $tasks);
-        $tasksDict = array_combine($orderedTaskIds,$tasks);
 
-        array_walk($tasksDict, array($this, "is_executable"));
+        $currentTaskId = 0; // Start with the first task
+        $tasks[0]['assignee_id'] = 1;
 
-        return response()->json($tasksDict);
+        $apiService = app(AirHackApiService::class);
+
+        foreach($tasks as $taskIndex => $task) {
+
+            if ($currentTaskId !== $taskIndex) {
+                $this->isExecutable(
+                    $tasks[$currentTaskId],
+                    $tasks[$taskIndex]
+                );
+                $tasks[$taskIndex]['assignee_id'] = 1;
+            }
+
+            $currentTaskId = $taskIndex;
+        }
+
+        $result["tasks"] = $tasks;
+        $response = $apiService->postResult($result);
+
+        return response()->json($response);
     }
 
     public function health()
     {
         return response()->json(['success' => true]);
+    }
+
+    private function isExecutable($currentTask, $taskToCompare)
+    {
+        return $this->distance($currentTask['lat'], $currentTask['lng'], $taskToCompare['lat'], $taskToCompare['lng']);
+    }
+
+    private function distance($lat1, $lon1, $lat2, $lon2) {
+        if (($lat1 == $lat2) && ($lon1 == $lon2)) {
+            return 0;
+        }
+        else {
+            $theta = $lon1 - $lon2;
+            $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
+            $dist = acos($dist);
+            $dist = rad2deg($dist);
+            $miles = $dist * 60 * 1.1515;
+
+            return $miles * 1.60934;
+        }
     }
 }
