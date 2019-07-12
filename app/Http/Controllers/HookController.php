@@ -18,34 +18,39 @@ class HookController extends Controller
         Log::error($request->all());
 
         $result = $request->all();
-        $taskersCount = $result["taskersCount"];
-        $taskers = range(1, $taskersCount);
 
         $tasks = $result["tasks"];
         usort($tasks, array($this, "date_sort"));
 
         $currentTaskId = 0; // Start with the first task
+
+        $taskersCount = $result["taskersCount"];
+        $taskersCurrentTask = array_fill(1, $taskersCount, null);
+
         $tasks[0]['assignee_id'] = 1;
+        $taskersCurrentTask[1] = $tasks[$currentTaskId];
 
-        $apiService = app(AirHackApiService::class);
-
-        foreach($tasks as $taskIndex => $task) {
-
+        foreach ($tasks as $taskIndex => $task) {
             if ($currentTaskId !== $taskIndex) {
-                if ($this->isExecutable(
-                    $tasks[$currentTaskId],
-                    $tasks[$taskIndex]
-                ))
-                $tasks[$taskIndex]['assignee_id'] = 1;
+                foreach ($taskersCurrentTask as $tasker => $currentTaskerTask) {
+                    if ($currentTaskerTask == null || $this->isExecutable(
+                        $currentTaskerTask,
+                        $tasks[$taskIndex]
+                    )) {
+                        $tasks[$taskIndex]['assignee_id'] = $tasker;
+                        $taskersCurrentTask[$tasker] = $tasks[$taskIndex];
+                        break;
+                    }
+                }
             }
 
             $currentTaskId = $taskIndex;
         }
 
         $result["tasks"] = $tasks;
-        //$response = $apiService->postResult($result);
-
-        return response()->json($result);
+        $apiService = app(AirHackApiService::class);
+        $response = $apiService->postResult($result);
+        return response()->json($response);
     }
 
     public function health()
@@ -59,16 +64,16 @@ class HookController extends Controller
         $timeToGo = sprintf('%02d:%02d', (int) $time2, fmod($time2, 1) * 60);
 
         $secs = strtotime($timeToGo) - strtotime("00:00:00");
-        $result = date("H:i:s",strtotime($currentTask["dueTime"] . '+ 30 minutes') + $secs);
+        $result = date("H:i:s", strtotime($currentTask["dueTime"] . '+ 30 minutes') + $secs);
 
         return (new \DateTime($result) < new \DateTime($taskToCompare['dueTime']));
     }
 
-    private function distance($lat1, $lon1, $lat2, $lon2) {
+    private function distance($lat1, $lon1, $lat2, $lon2)
+    {
         if (($lat1 == $lat2) && ($lon1 == $lon2)) {
             return 0;
-        }
-        else {
+        } else {
             $theta = $lon1 - $lon2;
             $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
             $dist = acos($dist);
