@@ -33,7 +33,7 @@ class AirHackApiService
                 ]
             ]);
 
-            return json_decode($response, true);
+            return json_decode($response->getBody());
         } catch(\Exception $exception) {
             return false;
         }

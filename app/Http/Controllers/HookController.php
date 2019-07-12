@@ -15,7 +15,6 @@ class HookController extends Controller
 
     public function incomingTasks(Request $request)
     {
-        Log::error($request->all());
 
         $result = $request->all();
 
