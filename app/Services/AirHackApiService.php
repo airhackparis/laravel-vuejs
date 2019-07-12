@@ -3,6 +3,7 @@
 namespace App\Http\Services;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
 
 class AirHackApiService
 {
@@ -20,6 +21,24 @@ class AirHackApiService
     public function submitTasks()
     {
 
+    }
+
+    public function postResult($result)
+    {
+        try {
+            $response = $this->client->post($this->apiUrl.'/submitTasks' , [
+                RequestOptions::JSON => $result,
+                'headers' => [
+                    'Authorization' => 'Bearer jCm8ynTv7gCRDMbmOWZVuw8vhlE47ucV8KeImBa7Zadq5rqatwRSQSu6rSk5'
+                ]
+            ]);
+
+            var_dump(json_decode($response->getBody(), true));die;
+
+            return json_decode($response->getBody(), true);
+        } catch(\Exception $exception) {
+            return false;
+        }
     }
 
     public function checkHealth()
