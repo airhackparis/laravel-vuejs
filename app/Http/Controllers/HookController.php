@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Services\AirHackApiService;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Log;
 
 class HookController extends Controller
 {
@@ -15,6 +15,8 @@ class HookController extends Controller
 
     public function incomingTasks(Request $request)
     {
+        Log::error($request->all());
+
         $result = $request->all();
         $taskersCount = $result["taskersCount"];
         $taskers = range(1, $taskersCount);
@@ -30,10 +32,10 @@ class HookController extends Controller
         foreach($tasks as $taskIndex => $task) {
 
             if ($currentTaskId !== $taskIndex) {
-                $this->isExecutable(
+                if ($this->isExecutable(
                     $tasks[$currentTaskId],
                     $tasks[$taskIndex]
-                );
+                ))
                 $tasks[$taskIndex]['assignee_id'] = 1;
             }
 
@@ -41,9 +43,9 @@ class HookController extends Controller
         }
 
         $result["tasks"] = $tasks;
-        $response = $apiService->postResult($result);
+        //$response = $apiService->postResult($result);
 
-        return response()->json($response);
+        return response()->json($result);
     }
 
     public function health()
@@ -53,7 +55,13 @@ class HookController extends Controller
 
     private function isExecutable($currentTask, $taskToCompare)
     {
-        return $this->distance($currentTask['lat'], $currentTask['lng'], $taskToCompare['lat'], $taskToCompare['lng']);
+        $time2 = ($this->distance($currentTask['lat'], $currentTask['lng'], $taskToCompare['lat'], $taskToCompare['lng']) / 10);
+        $timeToGo = sprintf('%02d:%02d', (int) $time2, fmod($time2, 1) * 60);
+
+        $secs = strtotime($timeToGo) - strtotime("00:00:00");
+        $result = date("H:i:s",strtotime($currentTask["dueTime"] . '+ 30 minutes') + $secs);
+
+        return (new \DateTime($result) < new \DateTime($taskToCompare['dueTime']));
     }
 
     private function distance($lat1, $lon1, $lat2, $lon2) {

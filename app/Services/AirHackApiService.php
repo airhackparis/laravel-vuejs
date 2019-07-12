@@ -25,6 +25,7 @@ class AirHackApiService
 
     public function postResult($result)
     {
+        var_dump($result);
         try {
             $response = $this->client->post($this->apiUrl.'/submitTasks' , [
                 RequestOptions::JSON => $result,
@@ -33,7 +34,7 @@ class AirHackApiService
                 ]
             ]);
 
-            var_dump(json_decode($response->getBody(), true));die;
+            json_decode($response->getBody(), true);
 
             return json_decode($response->getBody(), true);
         } catch(\Exception $exception) {
