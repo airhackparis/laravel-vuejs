@@ -1,8 +1,11 @@
 <template>
     <div id="app">
         <header class="header">
-            <img class="header-image" height="64" src="images/logo2.png"/>
-            City Manager
+            <div class="header-left-container">
+                <img class="header-image" height="64" src="images/logo2.png"/>
+                City Manager
+            </div>
+            <div @click="resetSelection()" class="reset">Reset selection</div>
         </header>
         <div class="map-container">
             <div class="tasker-list" >
@@ -13,11 +16,15 @@
             <LMap
                 :zoom="zoom"
                 :center="center"
+                ref="map"
             >
                 <LTileLayer :url="url"></LTileLayer>
                 <v-marker-cluster>
-                    <LMarker v-for="task in filteredTasks" :lat-lng="[task.lat, task.lng]" ></LMarker>
+                    <LMarker v-for="task in filteredTasks" :lat-lng="[task.lat, task.lng]" >
+                        <LTooltip>{{task.dueTime}}</LTooltip>
+                    </LMarker>
                 </v-marker-cluster>
+                <LPolyline v-for="line in lines" :lat-lngs="line"></LPolyline>
             </LMap>
         </div>
 
@@ -25,7 +32,7 @@
 </template>
 
 <script>
-  import {LMap, LTileLayer, LMarker, LPolyline } from 'vue2-leaflet';
+  import {LMap, LTileLayer, LMarker, LPolyline, LTooltip } from 'vue2-leaflet';
   import test from './data.json';
 
   export default {
@@ -40,6 +47,9 @@
             selectedTasker: null
           }
         },
+        mounted(){
+            fetch('https://9de9745c.ngrok.io/getData')
+        },
         computed: {
           filteredTasks() {
             if (!this.selectedTasker) {
@@ -47,17 +57,47 @@
             }
 
             return this.tasks.filter(task => task['assignee_id'] === this.selectedTasker)
+          },
+          lines() {
+            let lines = [];
+
+            if (!this.selectedTasker) {
+              return lines
+            }
+
+            let lastPoint = null;
+
+            this.filteredTasks.map(task => {
+                if (lastPoint) {
+                  lines.push([[lastPoint.lat, lastPoint.lng], [task.lat, task.lng]])
+                }
+
+              lastPoint = {lat: task.lat, lng: task.lng}
+            })
+
+            return lines
           }
         },
         methods: {
           onClickTasker: function(taskerId) {
             this.selectedTasker = taskerId;
+
+            var bounds = new L.LatLngBounds([this.filteredTasks.map(task => [task.lat, task.lng])])
+            this.$refs.map.fitBounds(bounds)
+          },
+          resetSelection: function() {
+            this.selectedTasker = null;
+
+            var bounds = new L.LatLngBounds([this.filteredTasks.map(task => [task.lat, task.lng])])
+            this.$refs.map.fitBounds(bounds)
           }
         },
         components: {
           LMap,
           LTileLayer,
-          LMarker
+          LMarker,
+          LPolyline,
+          LTooltip
         }
     }
 </script>
@@ -65,6 +105,12 @@
 <style>
     @import "~leaflet.markercluster/dist/MarkerCluster.css";
     @import "~leaflet.markercluster/dist/MarkerCluster.Default.css";
+
+    html, body {
+        height: 100%;
+        width: 100%;
+        display: flex;
+    }
 
     #app {
         font-family: 'Avenir', Helvetica, Arial, sans-serif;
@@ -75,6 +121,18 @@
         display: flex;
         flex: 1;
         flex-direction: column;
+    }
+
+    .reset {
+        padding: 11px 15px;
+        border: 1px solid #d3d3d3;
+        border-radius: 70px;
+        cursor: pointer;
+        transition: all 200ms;
+    }
+
+    .reset:hover {
+        background-color: rgb(235, 235, 235);
     }
 
     .list-item {
@@ -109,16 +167,17 @@
         margin-right: 24px;
     }
 
-    html, body {
-        height: 100%;
-        width: 100%;
+    .header-left-container {
         display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     .header {
         height: 80px;
         display: flex;
         align-items: center;
+        justify-content: space-between;
         padding: 0 24px;
         border-bottom: 1px solid rgb(235, 235, 235);
     }

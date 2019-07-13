@@ -1748,6 +1748,13 @@ var _data_json__WEBPACK_IMPORTED_MODULE_1___namespace = /*#__PURE__*/__webpack_r
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
 
 
 /* harmony default export */ __webpack_exports__["default"] = ({
@@ -1762,6 +1769,9 @@ var _data_json__WEBPACK_IMPORTED_MODULE_1___namespace = /*#__PURE__*/__webpack_r
       selectedTasker: null
     };
   },
+  mounted: function mounted() {
+    fetch('https://9de9745c.ngrok.io/getData');
+  },
   computed: {
     filteredTasks: function filteredTasks() {
       var _this = this;
@@ -1773,17 +1783,50 @@ var _data_json__WEBPACK_IMPORTED_MODULE_1___namespace = /*#__PURE__*/__webpack_r
       return this.tasks.filter(function (task) {
         return task['assignee_id'] === _this.selectedTasker;
       });
+    },
+    lines: function lines() {
+      var lines = [];
+
+      if (!this.selectedTasker) {
+        return lines;
+      }
+
+      var lastPoint = null;
+      this.filteredTasks.map(function (task) {
+        if (lastPoint) {
+          lines.push([[lastPoint.lat, lastPoint.lng], [task.lat, task.lng]]);
+        }
+
+        lastPoint = {
+          lat: task.lat,
+          lng: task.lng
+        };
+      });
+      return lines;
     }
   },
   methods: {
     onClickTasker: function onClickTasker(taskerId) {
       this.selectedTasker = taskerId;
+      var bounds = new L.LatLngBounds([this.filteredTasks.map(function (task) {
+        return [task.lat, task.lng];
+      })]);
+      this.$refs.map.fitBounds(bounds);
+    },
+    resetSelection: function resetSelection() {
+      this.selectedTasker = null;
+      var bounds = new L.LatLngBounds([this.filteredTasks.map(function (task) {
+        return [task.lat, task.lng];
+      })]);
+      this.$refs.map.fitBounds(bounds);
     }
   },
   components: {
     LMap: vue2_leaflet__WEBPACK_IMPORTED_MODULE_0__["LMap"],
     LTileLayer: vue2_leaflet__WEBPACK_IMPORTED_MODULE_0__["LTileLayer"],
-    LMarker: vue2_leaflet__WEBPACK_IMPORTED_MODULE_0__["LMarker"]
+    LMarker: vue2_leaflet__WEBPACK_IMPORTED_MODULE_0__["LMarker"],
+    LPolyline: vue2_leaflet__WEBPACK_IMPORTED_MODULE_0__["LPolyline"],
+    LTooltip: vue2_leaflet__WEBPACK_IMPORTED_MODULE_0__["LTooltip"]
   }
 });
 
@@ -1909,7 +1952,7 @@ exports.i(__webpack_require__(/*! -!../../node_modules/css-loader??ref--6-1!../.
 exports.i(__webpack_require__(/*! -!../../node_modules/css-loader??ref--6-1!../../node_modules/vue-loader/lib/loaders/stylePostLoader.js!leaflet.markercluster/dist/MarkerCluster.Default.css */ "./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/leaflet.markercluster/dist/MarkerCluster.Default.css"), "");
 
 // module
-exports.push([module.i, "\n#app {\n    font-family: 'Avenir', Helvetica, Arial, sans-serif;\n    -webkit-font-smoothing: antialiased;\n    -moz-osx-font-smoothing: grayscale;\n    text-align: center;\n    color: #2c3e50;\n    display: flex;\n    flex: 1;\n    flex-direction: column;\n}\n.list-item {\n    height: 60px;\n    display: flex;\n    padding-left: 24px;\n    align-items: center;\n    border-bottom: 1px solid rgb(235, 235, 235);\n    cursor: pointer;\n    transition: all 200ms;\n}\n.list-item.selected {\n    background-color: rgb(235, 235, 235);\n}\n.list-item:hover {\n    background-color: rgb(235, 235, 235);\n}\n.tasker-list {\n    width: 30%;\n    overflow: auto;\n}\n.map-container {\n    flex: 1;\n    display: flex;\n}\n.header-image {\n    margin-right: 24px;\n}\nhtml, body {\n    height: 100%;\n    width: 100%;\n    display: flex;\n}\n.header {\n    height: 80px;\n    display: flex;\n    align-items: center;\n    padding: 0 24px;\n    border-bottom: 1px solid rgb(235, 235, 235);\n}\n", ""]);
+exports.push([module.i, "\nhtml, body {\n    height: 100%;\n    width: 100%;\n    display: flex;\n}\n#app {\n    font-family: 'Avenir', Helvetica, Arial, sans-serif;\n    -webkit-font-smoothing: antialiased;\n    -moz-osx-font-smoothing: grayscale;\n    text-align: center;\n    color: #2c3e50;\n    display: flex;\n    flex: 1;\n    flex-direction: column;\n}\n.reset {\n    padding: 11px 15px;\n    border: 1px solid #d3d3d3;\n    border-radius: 70px;\n    cursor: pointer;\n    transition: all 200ms;\n}\n.reset:hover {\n    background-color: rgb(235, 235, 235);\n}\n.list-item {\n    height: 60px;\n    display: flex;\n    padding-left: 24px;\n    align-items: center;\n    border-bottom: 1px solid rgb(235, 235, 235);\n    cursor: pointer;\n    transition: all 200ms;\n}\n.list-item.selected {\n    background-color: rgb(235, 235, 235);\n}\n.list-item:hover {\n    background-color: rgb(235, 235, 235);\n}\n.tasker-list {\n    width: 30%;\n    overflow: auto;\n}\n.map-container {\n    flex: 1;\n    display: flex;\n}\n.header-image {\n    margin-right: 24px;\n}\n.header-left-container {\n    display: flex;\n    justify-content: center;\n    align-items: center;\n}\n.header {\n    height: 80px;\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    padding: 0 24px;\n    border-bottom: 1px solid rgb(235, 235, 235);\n}\n", ""]);
 
 // exports
 
@@ -19881,7 +19924,22 @@ var render = function() {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("div", { attrs: { id: "app" } }, [
-    _vm._m(0),
+    _c("header", { staticClass: "header" }, [
+      _vm._m(0),
+      _vm._v(" "),
+      _c(
+        "div",
+        {
+          staticClass: "reset",
+          on: {
+            click: function($event) {
+              return _vm.resetSelection()
+            }
+          }
+        },
+        [_vm._v("Reset selection")]
+      )
+    ]),
     _vm._v(" "),
     _c(
       "div",
@@ -19916,21 +19974,28 @@ var render = function() {
         _vm._v(" "),
         _c(
           "LMap",
-          { attrs: { zoom: _vm.zoom, center: _vm.center } },
+          { ref: "map", attrs: { zoom: _vm.zoom, center: _vm.center } },
           [
             _c("LTileLayer", { attrs: { url: _vm.url } }),
             _vm._v(" "),
             _c(
               "v-marker-cluster",
               _vm._l(_vm.filteredTasks, function(task) {
-                return _c("LMarker", {
-                  attrs: { "lat-lng": [task.lat, task.lng] }
-                })
+                return _c(
+                  "LMarker",
+                  { attrs: { "lat-lng": [task.lat, task.lng] } },
+                  [_c("LTooltip", [_vm._v(_vm._s(task.dueTime))])],
+                  1
+                )
               }),
               1
-            )
+            ),
+            _vm._v(" "),
+            _vm._l(_vm.lines, function(line) {
+              return _c("LPolyline", { attrs: { "lat-lngs": line } })
+            })
           ],
-          1
+          2
         )
       ],
       1
@@ -19942,12 +20007,12 @@ var staticRenderFns = [
     var _vm = this
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
-    return _c("header", { staticClass: "header" }, [
+    return _c("div", { staticClass: "header-left-container" }, [
       _c("img", {
         staticClass: "header-image",
         attrs: { height: "64", src: "images/logo2.png" }
       }),
-      _vm._v("\n        City Manager\n    ")
+      _vm._v("\n            City Manager\n        ")
     ])
   }
 ]
@@ -47487,6 +47552,7 @@ __webpack_require__.r(__webpack_exports__);
 vue__WEBPACK_IMPORTED_MODULE_2___default.a.component('l-map', vue2_leaflet__WEBPACK_IMPORTED_MODULE_5__["LMap"]);
 vue__WEBPACK_IMPORTED_MODULE_2___default.a.component('l-tile-layer', vue2_leaflet__WEBPACK_IMPORTED_MODULE_5__["LTileLayer"]);
 vue__WEBPACK_IMPORTED_MODULE_2___default.a.component('l-marker', vue2_leaflet__WEBPACK_IMPORTED_MODULE_5__["LMarker"]);
+vue__WEBPACK_IMPORTED_MODULE_2___default.a.component('l-polyline', vue2_leaflet__WEBPACK_IMPORTED_MODULE_5__["LPolyline"]);
 delete leaflet__WEBPACK_IMPORTED_MODULE_6__["Icon"].Default.prototype._getIconUrl;
 leaflet__WEBPACK_IMPORTED_MODULE_6__["Icon"].Default.mergeOptions({
   iconRetinaUrl: __webpack_require__(/*! leaflet/dist/images/marker-icon-2x.png */ "./node_modules/leaflet/dist/images/marker-icon-2x.png"),

@@ -3,7 +3,7 @@ import router from './router'
 import Vue from 'vue'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
-import { LMap, LTileLayer, LMarker } from 'vue2-leaflet';
+import { LMap, LTileLayer, LMarker, LPolyline } from 'vue2-leaflet';
 import { Icon } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import Vue2LeafletMarkerCluster from 'vue2-leaflet-markercluster'
@@ -11,6 +11,7 @@ import Vue2LeafletMarkerCluster from 'vue2-leaflet-markercluster'
 Vue.component('l-map', LMap);
 Vue.component('l-tile-layer', LTileLayer);
 Vue.component('l-marker', LMarker);
+Vue.component('l-polyline', LPolyline);
 
 delete Icon.Default.prototype._getIconUrl;
 
