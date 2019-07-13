@@ -1,50 +1,125 @@
 <template>
     <div id="app">
-        <img class="logo" src="images/airbnb-logo.png" />
-        <h1>Welcome to AirHack</h1>
-        <p>
-            <router-link to="/">Home</router-link> -
-            <router-link to="/airhack-api-health">AirHack Api Health</router-link>
-        </p>
-        <hr class="separator" />
-        <router-view></router-view>
+        <header class="header">
+            <img class="header-image" height="64" src="images/logo2.png"/>
+            City Manager
+        </header>
+        <div class="map-container">
+            <div class="tasker-list" >
+                <div :class="[item === selectedTasker ?  'selected' : '']" @click="onClickTasker(item)" class="list-item" v-for="(item) in taskers">
+                    Tasker n°{{item}}
+                </div>
+            </div>
+            <LMap
+                :zoom="zoom"
+                :center="center"
+            >
+                <LTileLayer :url="url"></LTileLayer>
+                <v-marker-cluster>
+                    <LMarker v-for="task in filteredTasks" :lat-lng="[task.lat, task.lng]" ></LMarker>
+                </v-marker-cluster>
+            </LMap>
+        </div>
+
     </div>
 </template>
 
 <script>
-    export default {
-        name: 'app'
+  import {LMap, LTileLayer, LMarker, LPolyline } from 'vue2-leaflet';
+  import test from './data.json';
+
+  export default {
+        name: 'app',
+        data() {
+          return {
+            url: 'http://{s}.tile.osm.org/{z}/{x}/{y}.png',
+            zoom: 14,
+            center: [48.8566, 2.3522],
+            taskers: test.taskersCount,
+            tasks: test.tasks,
+            selectedTasker: null
+          }
+        },
+        computed: {
+          filteredTasks() {
+            if (!this.selectedTasker) {
+              return this.tasks
+            }
+
+            return this.tasks.filter(task => task['assignee_id'] === this.selectedTasker)
+          }
+        },
+        methods: {
+          onClickTasker: function(taskerId) {
+            this.selectedTasker = taskerId;
+          }
+        },
+        components: {
+          LMap,
+          LTileLayer,
+          LMarker
+        }
     }
 </script>
 
-<style scoped>
+<style>
+    @import "~leaflet.markercluster/dist/MarkerCluster.css";
+    @import "~leaflet.markercluster/dist/MarkerCluster.Default.css";
+
     #app {
         font-family: 'Avenir', Helvetica, Arial, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         text-align: center;
         color: #2c3e50;
-        margin-top: 60px;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
     }
 
-    .logo {
-        width: 200px;
+    .list-item {
+        height: 60px;
+        display: flex;
+        padding-left: 24px;
+        align-items: center;
+        border-bottom: 1px solid rgb(235, 235, 235);
+        cursor: pointer;
+        transition: all 200ms;
     }
 
-    .separator {
-        margin-top: 80px;
-        margin-bottom: 80px;
-        border: 0;
-        height: 1px;
-        width: 70%;
-        background: #ccc;
+    .list-item.selected {
+        background-color: rgb(235, 235, 235);
     }
 
-    h1 {
-        margin-top: 0;
+    .list-item:hover {
+        background-color: rgb(235, 235, 235);
     }
 
-    a {
-        text-decoration: none;
+    .tasker-list {
+        width: 30%;
+        overflow: auto;
+    }
+
+    .map-container {
+        flex: 1;
+        display: flex;
+    }
+
+    .header-image {
+        margin-right: 24px;
+    }
+
+    html, body {
+        height: 100%;
+        width: 100%;
+        display: flex;
+    }
+
+    .header {
+        height: 80px;
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        border-bottom: 1px solid rgb(235, 235, 235);
     }
 </style>
